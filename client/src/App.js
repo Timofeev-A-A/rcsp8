@@ -27,69 +27,89 @@ function App() {
             return true;
         }
     }
-    const getOne = async (name) => {
-        const res = await axios.get(`/api/product/${name}`);
-        return res.data || [];
+    const getOne = (name) => {
+        axios.get(`/api/product/${name}`)
+            .then(function (res) {
+                console.log(res);
+                setGiven(res.data);
+            });
     }
 
-    const getAll = async () => {
-        let res = await axios.get(`/api/product`);
-        return res.data || [];
+    const getAll = () => {
+        axios.get(`/api/product`)
+            .then(function (res) {
+                console.log(res);
+                setProducts(res.data);
+            });
     }
 
-    const postProduct = async (creator) => {
+    const postProduct = (creator) => {
         if (authCheck(creator))
             return;
         let name = prompt('Enter product name');
         let description = prompt('Enter product description');
-        let res = await axios.post(`/api/product`,
+        axios.post(`/api/product`,
             {
                 name: name,
                 description: description,
                 creator: creator
             }
-        );
-        await getProducts();
-        return res.data || [];
+        )
+            .then(response => {
+                return response;
+            })
+            .then(data => {
+                alert(data.data);
+                getAll();
+            });
     }
-    const updateProduct = async (creator) => {
+    const updateProduct = (creator) => {
         if (authCheck(creator))
             return;
-        let old = prompt('Enter old product name');
-        getProduct(old);
-        if (creator !== given.creator && creator !== "admin") {
+        //let old = prompt('Enter old product name');
+        //getOne(old);
+        if (creator !== given.creator && creator !== 'admin') {
             alert(`У Вас не достаточно прав для редактирования объекта, созданного ${given.creator}`);
             return [];
         }
         let name = prompt('Enter new product name');
         let description = prompt('Enter new product description');
-        let res = await axios.put(`/api/product${given.id}`,
+        axios.put(`/api/product/${given._id}`,
             {
                 name: name,
                 description: description
             }
-        );
-        await getProducts();
-        return res.data || [];
+        ).then(response => {
+            return response;
+        })
+            .then(data => {
+                alert('Запись обновлена');
+                getAll();
+            });
     }
-    const deleteProduct = async (creator) => {
+    const deleteProduct = (creator) => {
         if (authCheck(creator))
             return;
-        let old = prompt('Enter product name');
-        getProduct(old);
+        //let old = prompt('Enter product name');
+        //getOne(old);
         console.log(given);
-        if (creator !== given.creator && creator !== "admin") {
+        if (creator !== given.creator && creator !== 'admin') {
             alert(`У Вас не достаточно прав для удаления объекта, созданного ${given.creator}`);
             return [];
         }
-        let res = await axios.delete(`/api/product${given.id}`);
-        getProducts();
-        return res.data || [];
+        axios.delete(`/api/product/${given._id}`)
+            .then(response => {
+            return response;
+        })
+            .then(data => {
+                alert('Запись удалена');
+                getAll();
+            });
     }
 
 
     useEffect(() => {
-        getProducts();
+        getAll();
     }, []);
 
   function handleInputChange(event) {
@@ -116,19 +136,6 @@ function App() {
           alert('Вы авторизовались как администратор');
       }
       else alert('Неверное имя пользователя или пароль');
-  }
-
-
-  const getProducts = async () => {
-    let res = await getAll();
-    console.log(res);
-    setProducts(res);
-  }
-
-  const getProduct = async (a) => {
-      let res = await getOne(a);
-      console.log(res);
-      setGiven(res);
   }
 
   const renderProduct = product => {
@@ -171,11 +178,20 @@ function App() {
               <p>No products found</p>
           )}
         </ul>
-          <br /><br />
+          <br />
+          <div>
+              <span>Выберите продукт для взаимодействия</span>
+              <button className="App-button" style={bStyle} onClick={event => getOne(prompt('Enter new product name'))}>Choose</button>
+          </div>
+          <div>
+              <span>Что вы хотите сделать с продуктом?</span>
+          </div>
           <div>
               <button className="App-button" style={bStyle} onClick={event => postProduct(currentUser)}>Add</button>
               <button className="App-button" style={bStyle} onClick={event => deleteProduct(currentUser)}>Delete</button>
               <button className="App-button" style={bStyle} onClick={event => updateProduct(currentUser)}>Update</button>
+              <button className="App-button" style={bStyle} onClick={event => console.log(given)}>Show</button>
+              <button className="App-button" style={bStyle} onClick={event => console.log(currentUser)}>User</button>
           </div>
       </div>
   );
